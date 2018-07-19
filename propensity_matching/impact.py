@@ -107,11 +107,14 @@ def impact(df: pyspark.sql.DataFrame,
                                    labelCol=response_col,
                                    predictionCol='prediction_{0}'.format(response_col),
                                    rawPredictionCol='rawPrediction_{0}'.format(response_col),
-                                   probabilityCol='probability_{0}'.format(response_col))
+                                   probabilityCol='probability_{0}'.format(response_col),
+                                   regParam=.05,
+                                   elasticNetParam=.5
+                                   )
     lrm_r = lre_r.fit(df)
 
     coeff_dict = dict(zip(pred_cols_r, lrm_r.coefficients))
 
     adjusted_response = control_rate * (1 - math.exp(coeff_dict[label_col]))
-    logging.getLogger(__name__).info("bias asjusted response is {ar:.2f}".format(ar=adjusted_response))
+    logging.getLogger(__name__).info("bias adjusted response is {ar:.2f}".format(ar=adjusted_response))
     return treatment_rate, control_rate, adjusted_response
