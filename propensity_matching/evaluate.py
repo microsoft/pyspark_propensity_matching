@@ -707,8 +707,8 @@ def _calc_bias_reduced(pre_df: DataFrame,
     b_red_df['bias_reduced_relative'] = b_red_df['bias_reduced_absolute'] / b_red_df['pre_bias'] * 100
 
     # output of pandas method may need to be converted to native float
-    starting_bias_mean = float(b_red_df['pre_bias'].mean())
-    starting_bias_var = float(b_red_df['pre_bias'].var())
+    starting_bias_mean = float(b_red_df['pre_bias'].abs().mean())
+    starting_bias_var = float(b_red_df['pre_bias'].abs().var())
 
     return b_red_df, starting_bias_mean, starting_bias_var
 
