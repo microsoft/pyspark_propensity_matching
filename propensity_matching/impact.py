@@ -7,7 +7,7 @@ import pyspark.sql.functions as F
 import pyspark.ml.feature as mlf
 import pyspark.ml.classification as mlc
 
-from .config import NAIVE_THRESHOLD_COUNT, SAMPLES_PER_FEATURE, MINIMUM_POS_COUNT
+from .config import SAMPLES_PER_FEATURE, MINIMUM_POS_COUNT
 from .utils import reduce_dimensionality, _persist_if_unpersisted, _get_pred_cols, _time_log
 
 
@@ -80,12 +80,6 @@ def impact(df: pyspark.sql.DataFrame,
     treatment_rate, control_rate = naive_response_dict[1], naive_response_dict[0]
     logging.getLogger(__name__).info("treatment_rate:{tr:.2f}   control_rate:{cr:.2f}".format(tr=treatment_rate, cr=control_rate))
 
-    # return early if additional bias reduction is not applicable
-    if all_count < NAIVE_THRESHOLD_COUNT:
-        logging.getLogger(__name__).info("additional bias adjustment inapplicable, returning naive difference")
-        return treatment_rate, control_rate, (control_rate-treatment_rate)
-
-    logging.getLogger(__name__).info("additional bias adjustment possible")
     # choose fewer features if appropriate to prevent overfit. round down
     num_preds = int(df.where(F.col(label_col) == 1).count() // SAMPLES_PER_FEATURE) - 1
     logging.getLogger(__name__).info("need max {n:,} predictors".format(n=num_preds))

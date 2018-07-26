@@ -7,7 +7,7 @@
 dist/
 *.egg-info/
 .ipynb_checkpoints/
-
+testing/
 
 
 # User-specific files

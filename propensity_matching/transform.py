@@ -959,27 +959,41 @@ def _adjust_balance(t_df: DataFrame,
         scaled = t_adj_count/t_count
         logging.getLogger(__name__).info("scaled: {s:.2f}   adjusted treatment count {tac:,}".format(s=scaled, tac=t_adj_count))
 
+        c_adj_count = c_can_count
+        c_adj_df = c_can_df
+
         if t_adj_count < MINIMUM_POS_COUNT:
             logging.getLogger(__name__).critical("treatment count {tac:,} less than MINIMUM_POS_COUNT {MPC:,}".format(tac=t_adj_count, MPC=MINIMUM_POS_COUNT))
             raise ValueError('population is too unbalanced to match')
+    elif c_can_count > (t_count * mean_ratio * 10):
+        logging.getLogger(__name__).info("too many control candidates, sampling them down")
+        frac = (t_count * mean_ratio * 10)/c_can_count
+        c_adjusted_df = c_can_df.sample(fraction=frac, withReplacement=False, seed=42)
+        c_adj_count = c_adjusted_df.count()
+        logging.getLogger(__name__).info(
+        "controls cans reduced: adjusted control count {cac:,}".format(cac=c_adj_count))
+
+        t_adj_count = t_count
+        t_adj_df = t_df
+
     else:
         logging.getLogger(__name__).info("adjustment of treatment NOT necessary")
         t_adjusted_df = t_df
         scaled = 1
-    t_adjusted_count = t_adjusted_df.count()
     match_info = {
         'scaled': scaled,
         'init_t_mean': t_mean,
         'init_c_can_mean': c_can_mean,
         'init_t_count': t_count,
         'init_c_can_count': c_can_count,
-        'adj_t_count': t_adjusted_count
-    }
-    if t_adjusted_count > c_can_count:
-        logging.getLogger(__name__).critical("more treatments thatn controls, this shouldnt have happened")
+        'adj_t_count': t_adj_count,
+        'adj_c_count': c_adj_count
+        }
+    if t_adj_count > c_adj_count:
+        logging.getLogger(__name__).critical("more treatments than controls, this shouldnt have happened")
         raise ValueError("more treatments that controls")
 
-    return t_adjusted_df, c_can_df, match_info
+    return t_adj_df, c_adj_df, match_info
 
 
 @_time_log
